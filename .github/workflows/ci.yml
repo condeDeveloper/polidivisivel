@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.so }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        so: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      # Os testes primeiro: sao eles que prendem os numeros das tabelas.
+      - name: Testes
+        run: dotnet test testes/Polidivisivel.Testes/Polidivisivel.Testes.csproj -c Release --nologo
+
+      - name: O maior numero poli-divisivel
+        run: dotnet run --project ferramentas/Medidor/Medidor.csproj -c Release -- maior
+
+      - name: Quantos existem de cada comprimento, contra a previsao ingenua
+        run: dotnet run --project ferramentas/Medidor/Medidor.csproj -c Release -- comprimentos
+
+      - name: O mesmo problema em outras bases
+        run: dotnet run --project ferramentas/Medidor/Medidor.csproj -c Release -- bases
+
+      - name: A geracao por crescimento contra a forca bruta
+        run: dotnet run --project ferramentas/Medidor/Medidor.csproj -c Release -- confronto
